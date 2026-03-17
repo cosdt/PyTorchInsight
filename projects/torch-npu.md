@@ -1,20 +1,10 @@
 # torch-npu Project Config
 
 ## Data Sources
-- source: https://github.com/Ascend/pytorch
-  type: github
-  fetcher: github-mcp
-  scope: [release, issue, pr]
-
-- source: https://github.com/Ascend/pytorch/releases
-  type: github
-  fetcher: github-mcp
-  scope: [release]
-
-- source: https://www.hiascend.com/
-  type: website
+- source: https://gitcode.com/Ascend/pytorch
+  type: gitcode
   fetcher: webfetch
-  scope: [announcement, release-note]
+
 
 ## Repository Context
 - primary_repo: Ascend/pytorch

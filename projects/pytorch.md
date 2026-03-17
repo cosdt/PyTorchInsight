@@ -25,6 +25,9 @@
     role: related
   - repo: pytorch/xla
     role: related
+  - repo: Ascend/pytorch
+    role: downstream
+    url: https://gitcode.com/Ascend/pytorch
 
 ## Version Mapping
 - project_ref: main
