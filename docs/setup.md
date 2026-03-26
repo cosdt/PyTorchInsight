@@ -1,5 +1,16 @@
 # PyTorch Community MCP Server — Setup Guide
 
+## Configuration
+
+After cloning, copy the example config files and fill in your local paths:
+
+```bash
+cp opencode.json.example opencode.json
+cp .mcp.json.example .mcp.json
+```
+
+Edit both files to replace `<path-to-openinsight-mcp>` with the absolute path to your local [openinsight_mcp](https://github.com/cosdt/openinsight_mcp) clone, and `<your-github-pat>` with your GitHub Personal Access Token.
+
 ## Installation
 
 ```bash

@@ -2,6 +2,10 @@
 __pycache__/
 *.pyc
 
+# Python environment
+.venv/
+.pytest_cache/
+
 # Local/private working notes
 local_docs/
 
@@ -31,6 +35,18 @@ local_docs/
 # Runtime report outputs
 daily_report/
 reports/.staging/
+reports/*.html
+reports/*.md
+!reports/.gitkeep
+
+# Personal / local config
+user-prompt*.md
+!user-prompt.example.md
+opencode.json
+.mcp.json
+
+# Internal workflow
+openspec/
 
 # OS files
 .DS_Store
