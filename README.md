@@ -1,39 +1,103 @@
-# OpenInsight
+# PyTorch Community MCP
 
-OpenInsight 是一套运行在 OpenCode 内的开源社区情报 `delivery` runtime。它从 GitHub、Web、Slack 等多源信号中提炼高浓度摘要与行动建议，并产出可直接投递的 `mail_html + trace`。
+A domain-specific [MCP](https://modelcontextprotocol.io/) server that gives AI agents access to PyTorch community intelligence. Instead of juggling 120+ generic tools from separate GitHub and Discourse MCPs, this server provides **10 curated, PyTorch-focused tools** with a unified Markdown output format.
 
-## 当前模型
+Data sources covered: **GitHub** (pytorch/pytorch, pytorch/rfcs), **Discourse** (discuss.pytorch.org), **PyTorch Events**, and the **PyTorch Blog RSS feed**.
 
-- **唯一入口**：`openinsight-orchestrator` 是唯一主 agent，也是唯一允许读取原始用户 prompt 的个性化入口。
-- **项目解耦**：`projects/*.md` 只维护项目级事实与扩展配置，例如数据源、仓库关系、版本映射、本地分析策略。
-- **逐级消化**：下游 agent 只消费上游缩减后的结构化 brief，不直接读取原始用户 prompt，也不直接读取项目配置。
-- **可追溯**：最终结果带有 `trace`，可追溯到工具、来源和链接。
+## Tools
 
-## 它能做什么
+| Tool | Description | Source |
+|------|-------------|--------|
+| `get_prs` | Fetch pull requests by date range and module | GitHub |
+| `get_issues` | Fetch issues by date range, module, and state | GitHub |
+| `get_commits` | Fetch commits by date range and author | GitHub |
+| `get_rfcs` | Fetch RFCs from pytorch/pytorch and pytorch/rfcs | GitHub |
+| `get_pr_detail` | Get detailed info for a single PR | GitHub |
+| `get_issue_detail` | Get detailed info for a single issue | GitHub |
+| `get_discussions` | Search forum topics | Discourse |
+| `get_events` | Fetch community events | pytorch.org |
+| `get_blog_news` | Fetch blog posts from RSS feed | pytorch.org |
+| `get_key_contributors_activity` | Cross-platform activity summary for a contributor | GitHub + Discourse |
 
-- **按次定制简报**：通过 orchestrator prompt 指定本次关注视角、时间窗口、重点主题和目标项目。
-- **多源情报汇聚**：聚合 GitHub（issue/PR/release）、论坛、官网/博客、Slack 等信号，形成统一事件视图。
-- **深度研判**：对少量高价值候选做深读，输出影响范围、风险判断与建议动作。
-- **运行结果落盘**：每次成功运行后，结果持久化到 `daily_report/<YYYYMMDD-HHMM>/`。
+## Deployment
 
-## 仓库范围
+### Prerequisites
 
-当前仓库只包含 OpenCode 内部 `delivery` runtime：
+- Python >= 3.11
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
 
-- `.opencode/agents/*.md`：多 agent prompt
-- `.opencode/skills/*/SKILL.md`：运行契约和输出风格
-- `projects/*.md`：项目级运行时配置
-- `daily_report/`：已生成结果
+### Install
 
-当前 **不包含**：
+```bash
+# With uv (recommended)
+uv pip install -e .
 
-- `users/*`、`department_strategy.md` 或任何持久化个性化配置
-- SMTP / IMAP / HTTP server / 队列 / 数据库
-- reply-feedback 闭环
-- UI 或 dashboard
+# Or with pip
+pip install -e .
+```
 
-## 参考文档
+### Environment Variables
 
-- [docs/multiagent.md](/Users/chu/project/openinsight/docs/multiagent.md)
-- [docs/prd.md](/Users/chu/project/openinsight/docs/prd.md)
-- [docs/opencode-local-setup.md](/Users/chu/project/openinsight/docs/opencode-local-setup.md)
+| Variable | Purpose | Required | Notes |
+|----------|---------|----------|-------|
+| `GITHUB_TOKEN` | GitHub API access | Yes | Personal access token with `repo` scope |
+| `DISCOURSE_API_KEY` | Discourse API key | Optional | For authenticated forum access |
+| `DISCOURSE_API_USERNAME` | Discourse username | Optional | Required with `DISCOURSE_API_KEY` |
+
+### Run
+
+```bash
+# From the project directory (no pre-install needed)
+uv run pytorch-community-mcp
+
+# Or if already installed
+pytorch-community-mcp
+```
+
+The server starts on **stdio** transport by default.
+
+## Client Configuration
+
+### Claude Code
+
+Add to your Claude Code MCP settings (`~/.claude/settings.json` or project-level `.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "pytorch-community": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/openinsight_mcp", "pytorch-community-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_..."
+      }
+    }
+  }
+}
+```
+
+### OpenCode
+
+Add to your OpenCode config (`opencode.json`):
+
+```json
+{
+  "mcpServers": {
+    "pytorch-community": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/openinsight_mcp", "pytorch-community-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_..."
+      }
+    }
+  }
+}
+```
+
+> **Note:** Replace `/absolute/path/to/openinsight_mcp` with the actual path where you cloned this repo. `uv run --directory` handles dependency resolution automatically — no pre-installation needed, and the configuration works from any working directory.
+>
+> Adjust `env` to include whichever credentials you need. Only tools whose credentials are configured will function — the rest will return a clear error message.
+
+## License
+
+Apache-2.0
