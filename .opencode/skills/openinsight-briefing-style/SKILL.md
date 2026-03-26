@@ -1,6 +1,6 @@
 ---
 name: openinsight-briefing-style
-description: "Generates beautifully formatted HTML community briefing reports with executive summaries, deep analysis details, cross-item insights, and data source coverage status."
+description: "Generates well-structured Markdown community briefing reports with executive summaries, deep analysis details, cross-item insights, and data source coverage status."
 allowed-tools:
   - Read
   - Write
@@ -9,7 +9,7 @@ allowed-tools:
 
 # OpenInsight Briefing Style
 
-你是报告样式生成技能，负责将结构化的社区动态分析结果渲染为美观的 HTML 报告。
+你是报告样式生成技能，负责将结构化的社区动态分析结果组织为结构清晰的 Markdown 报告。
 
 ## 使用方式
 
@@ -17,14 +17,14 @@ briefing-composer agent 在生成报告时调用此 skill。
 
 ## 资源文件
 
-- `assets/report-template.html`: HTML 报告模板，包含完整的结构和 CSS 样式
-- `references/style-guide.md`: 报告样式指导文档，定义配色、排版、交互规范
+- `assets/report-template.md`: Markdown 报告模板，包含完整的区段结构和占位符
+- `references/style-guide.md`: 报告样式指导文档，定义区段格式、标识符号、折叠规范
 
 ## 报告生成指令
 
 ### 1. 读取模板
 
-从 `assets/report-template.html` 读取 HTML 模板结构。
+从 `assets/report-template.md` 读取 Markdown 模板结构。
 
 ### 2. 填充内容
 
@@ -41,12 +41,11 @@ briefing-composer agent 在生成报告时调用此 skill。
 ### 3. 样式应用
 
 参照 `references/style-guide.md` 中的规范：
-- 使用指定的配色方案
-- 应用排版规则
-- 添加折叠/展开交互
-- 添加锚点导航
-- 降级数据源使用特殊视觉样式
+- 使用影响等级 emoji 标识（🔴🟡🟢）
+- 使用 `<details>` 折叠分类列表
+- 使用引用块展示洞察
+- 降级数据源使用 ⚠️/❌ 标识
 
 ### 4. 输出
 
-生成完整的 HTML 文件，包含内联 CSS，无外部依赖。文件保存到用户指定路径或默认路径。
+生成标准 GFM Markdown 文件，无外部依赖。文件保存到 orchestrator 指定的路径。

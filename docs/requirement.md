@@ -1,156 +1,51 @@
-## 背景
+# OpenInsight 需求规格
 
-当前，PyTorch开源社区每天产生海量动态，分布于GitHub主仓库、Discourse论坛、Discord/Slack频道、PyTorch基金会官网、社区核心开发者的个人动态、邮件列表等多个信息源。参与开源PyTorch团队的开发者获取这些上游信息的主要方式仍高度依赖手动操作。
+## 用户
 
-## 现状
+参与 PyTorch 开源项目的组员。
 
-1. pytorch团队核心开发者。需要关注社区核心开发者的动态、关于社区演进方向的讨论、官方活动、基金会的动态等等。
-    1. 痛点：每日海量PR/Issue/RFC/开发者论坛（Discourse、Discord、GitHub Discussions）产生，逐一全量浏览耗时耗力，在这个过程中也易错过高价值信号。
-2. pytorch团队开发者。关注微观，需要尽快在参与到社区中、在特定模块构建自己的影响力。
-    1. 痛点同上，另外缺少对问题“品味”的能力，不知哪些Issue/RFC投入产出比最高、哪些动态隐藏机会。
+## 软件形态
 
-## 解决方案
+服务器中心化部署，输出推送给全组，通过 GitHub 托管的静态页面呈现。
 
-1. 在Opencode基础上，开发multi-agent+skill的社区动态分析agent。
-2. 开发pytorch-community-dynamics-mcp，使agent更容易获得动态信息。
+## 功能需求
 
-## 社区动态agent
+### 社区动态采集与个性化简报
 
-在Opencode基础上，扩展agent skill + multi-agent协作系统。根据用户对自己角色、需求、价值的描述，让opencode自动分析在一个开源社区的一定时间内（例如一天、一周）对这个用户高价值的动态，必要的时候深入代码静态分，最后生成个性化社区动态报告。
+自动从多数据源采集指定**时间窗口**内的 PyTorch 社区动态，进行汇总、筛选、分析，根据组员的不同角色生成个性化社区动态简报。
 
-### 竟品分析
+采集的社区动态类型：
 
-github copilot、grok能部分缓解，但是它们上下文窗口有限，即使付费订阅，也会因为受限于单次对话的行动步数和rate limit，同时也不支持在一个大任务中深入到具体pr、issue所涉及代码的分析。
+- PR（暂时只关注新建的活动）
+- Issue（暂时只关注新建的活动）
+- Release
+- RFC
+- 官网 Events 和 Blogs
+- 开发者论坛 [dev-discuss.pytorch.org](http://dev-discuss.pytorch.org/)
+- PyTorch 社区关键人物在社区内的动态
 
-### 难点
+### 价值定义
 
-1. 信息高召回率与模型上下文窗口有限的矛盾。
-2. 爬取PyTorch官网时数据的低效问题与信息稀疏问题。
+通过专家 prompt.md 定义。
 
-### 工作流
+### 影响面分析与行动建议
 
-1. 用户打开opencode，按tab切换到openinsight-orchestrator agent，输入
+能够对重要事项进行影响面分析，提供行动建议：
 
-```jsx
-@user-prompt.md + 时间窗口
-```
+- 对事项进行优先级排序
+- 进行源码级分析，触发时机由 agent 自主判断
 
-其中user-prompt.md是用户自己配置的个性化prompt文件，描述自身角色、需求、价值判断标准。
+### 触发方式与频率
 
-1. opencode通过以下multi-agent拓扑完
+手动触发，每周执行。
 
-```mermaid
-flowchart TD
-    O[openinsight-orchestrator] --> P1[project-coordinator]
-    O --> P2[briefing-composer]
+### 交付产物
 
-    P1 --> G[github-scout]
-    P1 --> W[external-source-scout-web]
-    P1 --> S[external-source-scout-slack]
-    P1 --> I[item-analyst]
-```
+- Markdown 格式报告
+- Github 静态界面展示
 
-以pytorch为例：
+## 质量需求
 
-- `openinsight-orchestrator` 负责输入、编排subagent、输出。首先读取原始用户 prompt。根据用户指定的pytorch项目，调用 `project-coordinator` 负责pytorch项目信息的获取。
-- `project-coordinator`
-    - 首先调用各个信息搜寻subagent收集项目动态，例如github-scout subagent通过github cli、github mcp等工具收集github上的动态；external-source-scout-slack subagent收集slack上的动态，结果是过滤掉无用、噪声信息，将信息组织好返回给`project-coordinator`
-    - 然后`project-coordinator` 进行价值判断、筛选出值得深度研究高价值的动态项，对每个项目分配一个item-analyst subagent进行深度研究
-    - item-analyst subagent 对一条动态进行深度研究；例如对可能影响到用户侧api的变化，其会通过静态分析torch和torch-npu的源码来研究出影响范围。
-- `project-coordinator` 收集item-analyst subagent 的信息进行汇总返回给主agent `openinsight-orchestrator` ，`openinsight-orchestrator` 再根据用户的偏好输出，利用briefing-composer subagent 配合相关的输出skill将信息总结成用户希望的形式（例如html格式的文件、slack通知等）。
-
-### 各个agent的职责
-
-- openinsight-orchestrator：唯一主入口，编排各个subagent工作流，输入处理与输出；调用project-coordinator获得项目级动态，并交给briefing-compose拿到最终交付数据，按指定形式输出。
-- project-coordinator：项目级subagent，负责pytorch项目级信息处理，通过调用scouts拿到初步过滤的动态，筛选出值得深入分析的动态交给 item-analyst深入分析。
-- scouts：单个信源的信息搜集subagent，例如pytorch issue动态的获取，进行初步过滤，交回给project-coordinator
-- item-analyst：只服务于单项目协调器，通过结合静态代码深入分析单条动态，将分析结果交付回project-coordinator
-- briefing-composer：成稿层subagent，调用front-designskill将所有动态信息组织成美观的报告，交付回openinsight-orchestrator。
-
-### 使用本产品前后对比
-
-使用前的workflow
-
-```mermaid
-flowchart TD
-    A[开始一天工作] --> B[打开 GitHub Issues/PRs]
-    B --> C[逐条浏览标题与描述]
-    C --> D{值得投入吗？}
-    D -->|否| B
-    D -->|是| E[深入阅读评论 + 手动打开代码仓库 + 静态分析影响范围]
-    E --> F[切换到 Discourse 论坛]
-    F --> G[检查 Discord / Slack 讨论]
-    G --> H[搜索 RFC 与官方活动]
-    H --> I[重复循环 1-2 小时]
-    I --> J[耗费精力+容易遗漏]
-
-    classDef pain fill:#ffe6e6,stroke:#d32f2f,stroke-width:2px,color:#000
-    class B,C,D,E,F,G,H,I,J pain
-```
-
-使用后：
-
-```mermaid
-flowchart TD
-    Start[开始一天工作] 
-    --> Open[打开 Opencode]
-    --> Tab[切换到 openinsight-orchestrator agent]
-    --> Prompt[输入 @user-prompt.md + 时间窗口]
-    --> O[Orchestrator 智能编排]
-    O --> Multi[Multi-Agent 并行执行]
-    Multi --> Collect[并行采集\nGitHub + Slack + Discourse + 论坛动态]
-    Collect --> Filter[智能价值筛选 + 角色匹配]
-    Filter --> Deep[高价值项\nItem-Analyst 代码静态分析]
-    Deep --> Compose[Briefing-Composer 生成报告]
-    Compose --> End[快速浏览个性化报告，仅挑选重点深入研究]
-
-    classDef good fill:#e6f4ea,stroke:#137333,stroke-width:2px,color:#000
-    class End good
-    class Open good
-    class Tab good
-    class Prompt good
-```
-
-## pytorch-community-dynamics-mcp
-
-核心是能让agent容易地获得pytorch社区的一段时间内的**动态**信息。动态信息散落在issue、pr、rfc、社区大牛活动、slack、开发者论坛、pytorch官网（本质也是在github上），而需要获取这些信息的mcp有github mcp、slack mcp、discourse mcp。
-
-这些mcp提供的工具组合起来很复杂，有些工具也用不着，同时那么多工具容易污染上下文，同时除了issue、pr也不方便找到动态，需要多次调用。
-
-### 接口设计
-
-基于github mcp、discourse mcp、slack mcp，linkedin mcp，专门设计获取社区动态的mcp，相关接口如下。
-
-```python
-# 获取一段时间内的pr，可指定模块
-get_recent_prs
-
-# 获取一段时间内的issue，可指定模块
-get_recent_issues
-
-# 获取一段时间的rfc
-get_recent_rfcs
-
-# 获取一段时间内的指定频道的slack信息
-get_recent_slack_threads
-
-# 获取一段时间内的关键人物的动态
-get_key_contributors_activity
-
-# 获取一段时间内的开发者论坛动态
-get_recent_discussions
-
-# 获取更多mcp工具，例如github mcp
-get_specific_mcp_tool
-```
-
-## TODO List
-
-- [ ]  完成multi-agent编排与各个agent的prompt编写。
-- [ ]  添加静态分析代码的功能。
-- [ ]  开发PyTorch Activity MCP
-- [ ]  沉淀PyTorch Activity MCP开发经验，便于scale到其他开源项目。
-
-## 合规
-
-仅限内部使用。仅获取公开信息。
+1. 不能有虚假信息。
+2. 简报中的每个动态都必须链接到源动态。
+3. 可解释性——说明每条动态被选入简报的原因。

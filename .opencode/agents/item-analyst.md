@@ -11,10 +11,30 @@ temperature: 0.5
 ## 输入
 
 - `item`: 动态项详情（type、title、url、author、date、summary 等）
-- `wisdom_notepad`: 当前的 wisdom notepad 内容（可能为空）
+- `wisdom_notepad`: **已废弃，改为从 staging 读取**。分析开始前，主动读取 `{staging_dir}/wisdom.md`（可能为空或不存在）
 - `project_config`: 项目配置（仓库上下文、local_analysis_enabled 等）
 - `user_role`: 用户角色
 - `user_focus_areas`: 用户关注领域
+- `staging_dir`: staging 目录路径
+- `item_index`: 当前条目序号
+
+## Staging 输出
+
+分析完成后，将完整结构化分析结果（YAML 格式）写入 `{staging_dir}/phase3_item_{item_index}.md`。
+对话消息中仅返回摘要（≤100 tokens），包含 impact_level、recommended_action 和 wisdom_contribution。
+
+## 任务边界（MUST NOT）
+
+- MUST NOT 修改任何源代码仓库中的文件
+- MUST NOT 分析未由 coordinator 分配的条目
+- MUST NOT 超过 effort budget（见下方）
+- MUST NOT 在缺少必填字段的情况下返回结果
+
+## Effort Budget
+
+- 代码分析应在合理范围内完成：优先搜索关键 API 和受影响模块，避免全仓库遍历
+- 下游仓库影响检查应聚焦于高风险文件路径，通常几次深度检查即可判断影响范围
+- 若分析耗时过长或搜索无进展，及时停止并记录 `analysis_depth: surface`
 
 ## 分析流程
 
@@ -67,97 +87,32 @@ temperature: 0.5
 - 仅基于 PR/Issue 描述和 diff 信息进行分析
 - 记录分析深度为 `surface`
 
-### 3.5. Repo 管理（条件执行）
+### 3.5. 代码访问策略（条件执行）
 
-**前置条件**：`local_analysis_enabled: true` 且需要访问本地仓库代码
+**前置条件**：`local_analysis_enabled: true` 且动态涉及代码变更
 
-#### 3.5.1 Bare Clone 检查与创建
+**目标导向**：你需要访问代码来评估变更影响，具体如何管理仓库由你自主决定。以下是约束而非步骤处方：
 
-当需要访问仓库代码时，确保目标仓库的 bare clone 可用：
+**仓库管理约束**：
+- 使用 bare clone（`{repo_cache_dir}/{repo_short}.git`）+ `git worktree` 管理代码检出
+- 首次 clone MUST 使用 `--single-branch --branch <default_branch>` 最小化磁盘占用
+- 已有 bare clone 则直接复用，不重复克隆
+- 需要非默认分支时，按需 `fetch`（失败则跳过该分支分析）
+- **分析完成后（无论成功或失败）MUST 清理本次创建的所有 worktree**，不删除 bare clone
+- Git 任何操作失败 → 跳过代码分析 → 记录 `analysis_depth: surface`
 
-1. 检查 `{repo_cache_dir}/{repo_short}.git` 是否存在（如 `.cache/openinsight/repos/pytorch.git`）
-2. 若不存在，执行：
-   ```bash
-   git clone --bare <repo_url> <repo_cache_dir>/<repo_short>.git
-   ```
-3. 若已存在，直接使用，不重复克隆
-4. bare clone 跨 session 复用，不随单次分析结束而删除
+**版本对比**（PR target branch 非 main 时）：
+- 对比 main 与 target branch 中关键变更文件的差异
+- 推理 backport 状态、行为一致性、签名兼容性
+- 记录 `analysis_depth` 包含 `version-aware`
 
-#### 3.5.2 Worktree 创建
-
-通过 `git worktree add` 在 bare clone 上创建临时工作目录，检出特定分支的代码：
-
-**命名规则**：`{repo_short}-{ref_sanitized}-{session_id}`
-- `repo_short`: 仓库名称（如 pytorch, torch-npu）
-- `ref_sanitized`: 分支/tag 名称，`/` 替换为 `_`（如 release/2.7 → release_2.7）
-- `session_id`: 当前 OpenCode subagent session ID
-
-**路径**：`{worktree_dir}/{naming}`（如 `.cache/openinsight/worktrees/pytorch-main-sess_a1b2c3/`）
-
-执行：
-```bash
-git -C <repo_cache_dir>/<repo_short>.git worktree add <worktree_dir>/<naming> <ref>
-```
-
-记录本次 session 创建的所有 worktree 路径，供清理阶段使用。
-
-#### 3.5.3 Worktree 清理（Phase 3）
-
-分析完成后（**无论成功或失败**），清理本次 session 创建的所有 worktree：
-
-1. 对每个本次创建的 worktree 执行：
-   ```bash
-   git -C <repo_cache_dir>/<repo_short>.git worktree remove <worktree_path>
-   ```
-2. 即使部分 worktree 清理失败，**继续清理其余 worktree** 并正常输出分析结果
-3. 不删除 bare clone 本身（供后续 session 复用）
-
-### 3.6. 版本对比分析（条件执行）
-
-**触发条件**：`local_analysis_enabled: true` 且 PR 的 target branch **不是 main**（如 release/2.7, nightly 等）
-
-**不触发**：当 PR target branch 为 main 时，跳过版本对比
-
-**执行步骤**：
-
-1. 确保 PR 所属仓库的 bare clone 可用（参见 3.5.1）
-2. 创建两个 worktree（参见 3.5.2）：
-   - main 分支的 worktree
-   - target branch 的 worktree
-3. 在两个 worktree 中 diff PR 涉及的关键变更文件：
-   ```bash
-   diff <main_worktree>/path/to/file <target_worktree>/path/to/file
-   ```
-4. 根据 diff 结果**自主推理**版本间差异含义：
-   - **backport 状态**：该改动是否已存在于 main？是否为 cherry-pick？
-   - **行为一致性**：main 和 target branch 在此处的行为是否相同？
-   - **签名兼容性**：API 签名在两个版本间是否兼容？
-5. 将对比结论记录到 `version_comparison` 输出字段
-6. 将 `analysis_depth` 标记包含 `version-aware`
-
-### 3.7. 跨项目影响链追踪（条件执行）
-
-**触发条件**：`local_analysis_enabled: true` 且项目配置的 `related_repos` 中存在 `role: downstream` 的仓库
-
-**不触发**：当不存在 downstream repo 配置时，跳过跨项目分析
-
-**执行步骤**：
-
-1. 从 PR/Issue 中提取 changed APIs（函数名、类名、模块路径等）
-2. 对每个 downstream repo：
-   a. 确保其 bare clone 可用（参见 3.5.1）
-   b. 创建 worktree（参见 3.5.2），检出其 main 分支
-   c. 在 worktree 中全量搜索 changed APIs：
-      - 搜索策略**完全由你自主决定**——可以 grep API 名、函数名、模块名，也可以追踪 import 链
-      - 可搜索 Python 和 C++ 代码
-   d. 读取命中文件的上下文代码
-   e. 推理每处引用的**影响程度和风险等级**：
-      - 直接调用受影响 API → 高风险
-      - 间接依赖或通过 wrapper 调用 → 中风险
-      - 仅 import 但未实际使用 → 低风险
-3. 将影响链详情记录到 `impact_chain` 输出字段
-4. 将 `analysis_depth` 标记包含 `cross-project`
-5. 若搜索后无匹配，在 `impact_chain` 中记录 `overall_impact: none`
+**跨项目影响链追踪**（核心路径 — 存在 `role: downstream` 仓库时对每个高价值项 MUST 执行）：
+- 从 PR/Issue 提取 changed APIs → 在下游仓库搜索使用情况
+- 每个下游仓库最多 **5 次** 深度 Read（effort budget）
+- 评估每处引用的风险：直接调用（高）、间接依赖（中）、仅 import（低）
+- 分析深度由 impact 决定而非类型决定（文档 PR 也可能触发跨项目检查）
+- 记录 `analysis_depth` 包含 `cross-project`
+- 若搜索无匹配，记录 `impact_chain.overall_impact: none`
 
 ### 4. 贡献 Wisdom
 
@@ -173,6 +128,16 @@ git -C <repo_cache_dir>/<repo_short>.git worktree add <worktree_dir>/<naming> <r
   - 例："torch._dynamo 的内部 API 被 torch.compile 深度依赖，变更影响面广"
 
 只记录有价值的新发现，不重复 wisdom notepad 中已有的内容。
+
+## 自验证
+
+返回结果前 MUST 执行以下检查：
+1. 所有必填 YAML 字段（item_type, item_title, item_url, summary, impact_level, impact_areas, recommended_action, analysis_depth, evidence_sources, wisdom_contribution）均已填写且非空
+2. 若 `analysis_depth` 包含 `cross-project`，验证 `impact_chain` 字段存在
+3. 若 `analysis_depth` 包含 `version-aware`，验证 `version_comparison` 字段存在
+4. `summary` 长度在 200-500 字之间
+
+若检查失败，修正后再返回。
 
 ## 结构化输出格式
 

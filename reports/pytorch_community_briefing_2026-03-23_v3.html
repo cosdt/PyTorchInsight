@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch 社区动态报告 - 2026-03-23</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-light: #e8f0fe;
+    --danger: #d93025;
+    --danger-light: #fce8e6;
+    --warning: #f9ab00;
+    --warning-light: #fef7e0;
+    --success: #1e8e3e;
+    --success-light: #e6f4ea;
+    --text: #202124;
+    --text-secondary: #5f6368;
+    --border: #dadce0;
+    --bg: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg-secondary);
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Header */
+  .report-header {
+    background: var(--primary);
+    color: white;
+    padding: 32px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .report-header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .report-header .meta { font-size: 14px; opacity: 0.9; }
+
+  /* Navigation */
+  .nav {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .nav a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .nav a:hover { text-decoration: underline; }
+
+  /* Section */
+  .section {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-light);
+  }
+
+  /* Impact badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-high { background: var(--danger-light); color: var(--danger); }
+  .badge-medium { background: var(--warning-light); color: #e37400; }
+  .badge-low { background: var(--success-light); color: var(--success); }
+
+  /* Item card */
+  .item-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .item-card:hover { border-color: var(--primary); }
+  .item-card h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .item-card h3 a { color: var(--primary); text-decoration: none; }
+  .item-card h3 a:hover { text-decoration: underline; }
+  .item-card .item-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .item-card .item-summary { font-size: 14px; line-height: 1.6; }
+  .item-card .item-action {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary);
+  }
+  .item-card .evidence {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Collapsible */
+  details { margin-bottom: 8px; }
+  details summary {
+    cursor: pointer;
+    font-weight: 500;
+    padding: 8px 0;
+    color: var(--text);
+  }
+  details summary:hover { color: var(--primary); }
+  details > div { padding: 8px 0 8px 16px; }
+
+  /* List items */
+  .dynamic-list { list-style: none; }
+  .dynamic-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .dynamic-list li:last-child { border-bottom: none; }
+  .dynamic-list .star { color: var(--warning); margin-right: 4px; }
+  .dynamic-list a { color: var(--primary); text-decoration: none; }
+  .dynamic-list a:hover { text-decoration: underline; }
+  .dynamic-list .date { color: var(--text-secondary); font-size: 12px; }
+
+  /* Data source status */
+  .source-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .source-ok { background: var(--success-light); }
+  .source-degraded { background: var(--warning-light); }
+  .source-failed { background: var(--danger-light); }
+  .source-icon { font-size: 16px; }
+
+  /* Insight box */
+  .insight-box {
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+  }
+
+  /* Footer */
+  .report-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .number {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .stat-card .label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="report-header">
+    <h1>PyTorch 社区动态报告</h1>
+    <div class="meta">
+      时间窗口：2026-03-18 至 2026-03-23 (5天) | 生成日期：2026-03-23
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <a href="#executive-summary">Executive Summary</a>
+    <a href="#high-value">高价值动态</a>
+    <a href="#insights">跨动态洞察</a>
+    <a href="#all-dynamics">分类动态列表</a>
+    <a href="#data-sources">数据源状态</a>
+  </nav>
+
+  <!-- Executive Summary -->
+  <div class="section" id="executive-summary">
+    <h2>Executive Summary</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="number">342</div>
+        <div class="label">新增 Pull Requests</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">92</div>
+        <div class="label">新增 Issues</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">253</div>
+        <div class="label">代码提交</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">3</div>
+        <div class="label">官方博客文章</div>
+      </div>
+    </div>
+
+    <div class="insight-box">
+      <strong>本周核心动态：</strong>PyTorch 社区在编译器优化（Inductor/Dynamo）、Intel XPU 支持增强、以及性能优化方面持续活跃。特别值得关注的是 <code>torch.compile</code> 相关的多个性能优化和 bug 修复，以及 Intel Core Ultra Series 3 处理器支持的官方博客发布。
+    </div>
+
+    <p><strong>主要亮点：</strong></p>
+    <ul style="margin-left: 20px; margin-top: 8px;">
+      <li>🚀 <strong>性能突破：</strong>module.py 的 <code>_call_impl()</code> 方法通过使用 <code>torch._C._is_tracing()</code> 替代 <code>torch._C._get_tracing_state()</code>，实现约 15% 的性能提升</li>
+      <li>🔧 <strong>编译器修复：</strong>修复了 float32 大数值在 BatchNorm/LayerNorm/GroupNorm 中的溢出问题</li>
+      <li>💻 <strong>XPU 支持：</strong>大量 Intel GPU 测试启用和代码泛化工作</li>
+      <li>📊 <strong>数值稳定性：</strong>修复了 cumprod backward 的性能回归和多个数值精度问题</li>
+      <li>📰 <strong>官方发布：</strong>PyTorch 2.10 + TorchAO 支持 Intel Core Ultra Series 3 处理器</li>
+    </ul>
+  </div>
+
+  <!-- High Value Items -->
+  <div class="section" id="high-value">
+    <h2>高价值动态详情</h2>
+
+    <div class="item-card">
+      <h3><span class="badge badge-high">HIGH</span> <a href="https://github.com/pytorch/pytorch/pull/178073">[PERFORMANCE] 优化 _call_impl() 实现 15% 性能提升</a></h3>
+      <div class="item-meta">Pull Request · benediktjohannes · 2026-03-21</div>
+      <div class="item-summary">
+        将 <code>torch.nn.modules.module.py</code> 中的 <code>torch._C._get_tracing_state()</code> 替换为 <code>torch._C._is_tracing()</code>，避免返回完整追踪状态对象的开销。这是一个简单但影响深远的优化，直接提升所有 nn.Module 调用的性能。
+      </div>
+      <div class="item-action">建议行动: 关注合并进展，考虑在自定义模块中应用类似优化</div>
+      <div class="evidence">信息来源: PR #178073, Issue #178072</div>
+    </div>
+
+    <div class="item-card">
+      <h3><span class="badge badge-high">HIGH</span> <a href="https://github.com/pytorch/pytorch/pull/178123">修复 float32 大数值在归一化层的溢出问题</a></h3>
+      <div class="item-meta">Pull Request · gaurav-redhat · 2026-03-23</div>
+      <div class="item-summary">
+        修复了 BatchNorm、LayerNorm、GroupNorm 和 InstanceNorm 在处理大数值（~1e30）时的 float32 溢出问题。Welford 在线算法在计算方差时会出现溢出，导致 CPU 上产生 inf，CUDA 上产生 NaN。解决方案是在计算过程中提升精度。
+      </div>
+      <div class="item-action">建议行动: 如果使用大数值输入，关注此修复的合并</div>
+      <div class="evidence">信息来源: PR #178123, Issue #162489</div>
+    </div>
+
+    <div class="item-card">
+      <h3><span class="badge badge-medium">MEDIUM</span> <a href="https://github.com/pytorch/pytorch/pull/178104">修复 cumprod backward 性能回归</a></h3>
+      <div class="item-meta">Pull Request · Aminsed · 2026-03-22</div>
+      <div class="item-summary">
+        修复了 <code>torch.compile</code> 在 cumprod backward 计算中的性能回归。使用 out-of-place div 操作修复 composite compliance 问题，同时跳过 MPS 测试并放宽 Halide 容差。
+      </div>
+      <div class="item-action">建议行动: 如果使用 cumprod 操作，验证性能是否恢复</div>
+      <div class="evidence">信息来源: PR #178104</div>
+    </div>
+
+    <div class="item-card">
+      <h3><span class="badge badge-medium">MEDIUM</span> <a href="https://github.com/pytorch/pytorch/issues/178138">CUDACachingAllocator 与 NCCL 对称内存冲突</a></h3>
+      <div class="item-meta">Issue · staugust · 2026-03-23</div>
+      <div class="item-summary">
+        发现 PyTorch 的 CUDACachingAllocator 与 NCCL 对称内存 API（ncclCommWindowRegister）存在冲突，导致 all-reduce 结果不正确。这是一个严重的分布式训练问题，影响使用 NCCL 对称内存的场景。
+      </div>
+      <div class="item-action">建议行动: 如果使用 NCCL 对称内存，密切关注此问题进展</div>
+      <div class="evidence">信息来源: Issue #178138</div>
+    </div>
+
+    <div class="item-card">
+      <h3><span class="badge badge-medium">MEDIUM</span> <a href="https://pytorch.org/blog/pytorch-2-10torchao/">PyTorch 2.10 + TorchAO: Intel Core Ultra Series 3 支持</a></h3>
+      <div class="item-meta">Blog Post · Intel PyTorch Team · 2026-03-20</div>
+      <div class="item-summary">
+        官方发布 PyTorch 2.10 与 TorchAO 在 Intel Core Ultra Series 3 处理器上的 AIPC 场景支持。这是 Intel 与 PyTorch 合作的重要成果，为边缘 AI 推理提供了优化支持。
+      </div>
+      <div class="item-action">建议行动: 如果在 Intel 平台部署 AI 模型，了解新的优化特性</div>
+      <div class="evidence">信息来源: PyTorch 官方博客</div>
+    </div>
+
+    <div class="item-card">
+      <h3><span class="badge badge-medium">MEDIUM</span> <a href="https://github.com/pytorch/pytorch/pull/178137">修复 oneDNN API 兼容性导致的 scaled_mm 失败</a></h3>
+      <div class="item-meta">Pull Request · bjarzemb · 2026-03-23</div>
+      <div class="item-summary">
+        修复了 <code>scaled_mm</code> 在新版本 oneDNN 下的失败问题。当 mask=0（TensorWise/scalar scaling）时，使用空组 <code>{}</code> 替代之前的处理方式，确保与新版本 oneDNN 的兼容性。
+      </div>
+      <div class="item-action">建议行动: 如果使用 XPU 和量化特性，关注此修复</div>
+      <div class="evidence">信息来源: PR #178137</div>
+    </div>
+
+    <div class="item-card">
+      <h3><span class="badge badge-low">LOW</span> <a href="https://github.com/pytorch/pytorch/pull/178122">启用 B018 和 B019 flake8-bugbear lint 规则</a></h3>
+      <div class="item-meta">Pull Request · seungkyun-dan · 2026-03-23</div>
+      <div class="item-summary">
+        启用 B018（useless expression）和 B019（cached property in class body）lint 规则，清理 torch/ 目录下的违规代码。这是代码质量提升的一部分，有助于捕获潜在 bug。
+      </div>
+      <div class="item-action">建议行动: 代码质量改进，无需特别关注</div>
+      <div class="evidence">信息来源: PR #178122, Issue #106571</div>
+    </div>
+  </div>
+
+  <!-- Cross-Item Insights -->
+  <div class="section" id="insights">
+    <h2>跨动态洞察</h2>
+
+    <div class="insight-box">
+      <strong>🔥 torch.compile 数值稳定性问题集中爆发</strong><br>
+      本周 Issues 中有大量关于 <code>torch.compile</code> 与 eager 模式在数值结果上不一致的报告，特别是涉及大数值（~1e30）时产生 NaN/Inf 的问题。这表明编译器在处理边界数值时可能存在优化导致的精度损失，建议用户在使用大数值输入时进行充分测试。
+    </div>
+
+    <div class="insight-box">
+      <strong>💻 Intel XPU 支持持续增强</strong><br>
+      本周有多个 PR 专注于启用和泛化 Intel GPU 的测试支持，包括启用 21 个 Inductor 测试文件、修复 XPU 特定问题等。结合官方博客发布的 Intel Core Ultra Series 3 支持，表明 PyTorch 正在大力投资 Intel 平台优化。
+    </div>
+
+    <div class="insight-box">
+      <strong>⚡ 性能优化成为焦点</strong><br>
+      从 module.py 的 15% 性能提升到 cumprod backward 的回归修复，性能优化是本周的核心主题。社区正在积极识别和修复性能瓶颈，这对生产环境部署是积极信号。
+    </div>
+
+    <div class="insight-box">
+      <strong>🤝 分布式训练基础设施改进</strong><br>
+      多个 PR 涉及 DTensor、ProcessGroup 和 DeviceMesh 的改进，包括 opaque 对象支持、子类处理等。这些改进为大规模分布式训练提供了更健壮的基础设施。
+    </div>
+  </div>
+
+  <!-- Categorized Dynamic List -->
+  <div class="section" id="all-dynamics">
+    <h2>分类动态列表</h2>
+
+    <details open>
+      <summary>🔧 Pull Requests (50+ / 342 总计)</summary>
+      <div>
+        <ul class="dynamic-list">
+          <li><span class="star">⭐</span><a href="https://github.com/pytorch/pytorch/pull/178073">[PERFORMANCE] _call_impl() 15% 性能提升</a> <span class="date">2026-03-21</span></li>
+          <li><span class="star">⭐</span><a href="https://github.com/pytorch/pytorch/pull/178123">修复 float32 归一化层溢出问题</a> <span class="date">2026-03-23</span></li>
+          <li><span class="star">⭐</span><a href="https://github.com/pytorch/pytorch/pull/178104">修复 cumprod backward 性能回归</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178137">Fix scalar scale attribute for oneDNN API</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178135">Add bypass_device_restrictions for PrivateUse1</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178131">[xpu] Enable SYCLTLA filter for Unit Test skip</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178130">[Inductor][CUTLASS] Use shlex.join() for compiler args</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178122">Enable B018 and B019 flake8-bugbear lint rules</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178098">Fix CompiledFunctionBackward shape mismatch</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178101">Add blendv support for float8 vectorized types</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178097">Fix attn_mask shape in scaled_dot_product_attention docs</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178086">Expose more KinetoEvent Python bindings</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178075">[FSDP2] support non-float parameters</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178069">[docs] Add examples to reduce_scatter documentation</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/pull/178068">[docs] Add PyTorch Elastic documentation intro</a> <span class="date">2026-03-21</span></li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>🐛 Issues (50+ / 92 总计)</summary>
+      <div>
+        <ul class="dynamic-list">
+          <li><span class="star">⭐</span><a href="https://github.com/pytorch/pytorch/issues/178138">CUDACachingAllocator 与 NCCL 对称内存冲突</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178136">[CPU][Inductor] VecMask conversion error on ARM</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178134">torch.compile vs eager large error for Conv2d</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178133">torch.compile NaN/Inf disagreement on Conv2d</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178132">torch.compile streams support in AOTI</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178102">[C10] Incorrect channels-last contiguity flag</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178096">torch.compile BatchNorm2d + Conv2d mismatch</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178095">[Inductor CPU] bool to float8_e4m3fn compilation fails</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178080">CompiledFunctionBackward RuntimeError</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178072">[PERFORMANCE] _call_impl() optimization</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178066">[RFC] All-to-all permute for Ulysses Parallel</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178064">flash_attention_forward FlopCounter wrong</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178047">torch.compile addmm fusion numerical difference</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/issues/178038">torch.dot crashes on RTX 5060 Ti</a> <span class="date">2026-03-21</span></li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>💻 Commits (50+ / 253 总计)</summary>
+      <div>
+        <ul class="dynamic-list">
+          <li><a href="https://github.com/pytorch/pytorch/commit/1a4108cabed3ce40c7d5c7210812bf099a6790f2">F.interpolate cleanups</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/28f2520bc523dd488d303ee2641d216092c52aa7">[Triton][Inductor] Add non-TMA persistent MM template</a> <span class="date">2026-03-23</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/d90ad8efea989a1ac833bb901f992ae70e5b3f65">[dynamo] Add test for Event.synchronize()</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/613e2cfeef9482be4b0f194ebf21ba2350839d05">[OSDC] Update setup-linux for ARC runners</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/7e68d42ce1803e12d7b0c922937a314b9232ad74">[XPU] Enable 21 inductor test files</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/8b905db734f1ebff673bea8b9bfd647548a73228">Use aminmax in histc</a> <span class="date">2026-03-22</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/27c9a3533a6717ea1c8439ba9ff95bebe84d0204">[dynamo] Adjust tests for inline_inbuilt_nn_module</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/a1a09e089c68fe64c2339a57ec5f0ff336f7002b">[inductor] Parallelize PTX-to-fatbin compilation</a> <span class="date">2026-03-21</span></li>
+          <li><a href="https://github.com/pytorch/pytorch/commit/8d2d1bc06d9be9ea1a70a0ce3e5cc2b08d37d8c0">[DTensor] Fix subclass __torch_dispatch__ bypass</a> <span class="date">2026-03-21</span></li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>📰 Blog Posts (3)</summary>
+      <div>
+        <ul class="dynamic-list">
+          <li><span class="star">⭐</span><a href="https://pytorch.org/blog/pytorch-2-10torchao/">PyTorch 2.10+TorchAO: Intel Core Ultra Series 3</a> <span class="date">2026-03-20</span></li>
+          <li><a href="https://pytorch.org/blog/torchspec-speculative-decoding-training-at-scale/">TorchSpec: Speculative Decoding Training at Scale</a> <span class="date">2026-03-19</span></li>
+          <li><a href="https://pytorch.org/blog/generalized-dot-product-attention-tackling-real-world-challenges-in-gpu-training-kernels/">Generalized Dot-Product Attention</a> <span class="date">2026-03-18</span></li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Data Source Status -->
+  <div class="section" id="data-sources">
+    <h2>数据源覆盖状态</h2>
+    
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      GitHub PRs: 正常采集，获取 50/342 条动态（最近5天）
+    </div>
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      GitHub Issues: 正常采集，获取 50/92 条动态（最近5天）
+    </div>
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      GitHub Commits: 正常采集，获取 50/253 条提交（最近5天）
+    </div>
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      PyTorch Blog: 正常采集，获取 3 篇博客文章
+    </div>
+    <div class="source-status source-degraded">
+      <span class="source-icon">⚠️</span>
+      Slack: 未查询（如需 Slack 数据，请指定频道）
+    </div>
+    <div class="source-status source-degraded">
+      <span class="source-icon">⚠️</span>
+      Discourse: 未查询（如需论坛数据，请指定查询）
+    </div>
+
+    <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
+      <strong>工具反馈：</strong>pytorch-community MCP 提供的工具功能完善，能够很好地满足社区动态调查需求。建议未来可考虑增加：<br>
+      1. 按模块标签筛选（如 module: inductor, module: dynamo）<br>
+      2. 获取 PR 详细 diff 信息<br>
+      3. 获取 Issue 评论和讨论<br>
+      4. 获取 contributor 活跃度统计
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="report-footer">
+    由 OpenInsight Multi-Agent System 自动生成 | Powered by OpenCode
+  </div>
+
+</div>
+
+</body>
+</html>

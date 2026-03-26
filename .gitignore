@@ -26,7 +26,14 @@ local_docs/
 
 # Runtime report outputs
 daily_report/
+reports/.staging/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+.cache
+.codex
+.claude
+CLAUDE.md
+AGENTS.md

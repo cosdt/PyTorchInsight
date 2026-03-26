@@ -13,17 +13,40 @@ temperature: 0.1
 - `repos`: 仓库列表（primary_repo + related_repos）
 - `scope`: 采集范围（pr, issue, discussion, release 的组合）
 - `time_window`: 时间窗口（起止日期）
+- `staging_dir`: staging 目录路径（结果写入此目录）
+
+## Staging 输出
+
+采集完成后，将完整 Layer 2 数据写入 `{staging_dir}/phase1_github.md`。
+对话消息中仅返回 Layer 1 统计摘要（≤50 tokens），不返回 Layer 2 完整数据。
+
+## 任务边界（MUST NOT）
+
+- MUST NOT 判断条目的价值或重要性（价值评估是 coordinator 的职责）
+- MUST NOT 基于用户角色或关注领域过滤数据（那是 coordinator 的职责）
+- MUST NOT 对条目进行深度分析或推理
+- MUST NOT 编造或臆测数据源中不存在的信息
+- MUST NOT 在 Layer 2 摘要中超过 50 字
+
+## Effort Budget
+
+- 总工具调用上限：**15 次**（含所有 MCP/CLI 调用，不含重试）
+- 达到上限后 MUST 停止采集，返回已有结果
 
 ## 采集策略
 
-### 数据类型与工具映射
+### 数据类型与工具映射（按优先级降序）
 
-| 类型 | GitHub MCP 工具 | gh CLI 降级 |
-|------|----------------|-------------|
-| Pull Requests | `list_pull_requests` / `search_pull_requests` | `gh pr list --json` |
-| Issues | `list_issues` / `search_issues` | `gh issue list --json` |
-| Discussions | `search_code` (讨论搜索) | `gh api graphql` |
-| Releases | `list_releases` / `get_latest_release` | `gh release list --json` |
+| 类型 | Tier 1: pytorch-community MCP | Tier 2: GitHub MCP | Tier 3: gh CLI |
+|------|-------------------------------|---------------------|----------------|
+| Pull Requests | `mcp__pytorch-community__get_prs` | `mcp__github__list_pull_requests` / `mcp__github__search_pull_requests` | `gh pr list --json` |
+| Issues | `mcp__pytorch-community__get_issues` | `mcp__github__list_issues` / `mcp__github__search_issues` | `gh issue list --json` |
+| RFCs | `mcp__pytorch-community__get_rfcs` | — | — |
+| Commits | `mcp__pytorch-community__get_commits` | `mcp__github__list_commits` | — |
+| Releases | — | `mcp__github__list_releases` / `mcp__github__get_latest_release` | `gh release list --json` |
+| Discussions | — | — | `gh api graphql` |
+
+**采集优先级**: 对每种类型，从 Tier 1 开始尝试。Tier 1 不可用时降级到 Tier 2，依此类推。
 
 ### 采集流程
 
@@ -89,18 +112,36 @@ temperature: 0.1
 
 ## 降级链（Graceful Degradation）
 
-### 优先级1：GitHub MCP
+### 重试优先于降级
 
-使用 GitHub MCP 工具进行采集。这是首选路径，数据最完整。
+对同一 Tier 的工具调用失败时，**先重试 1 次**（间隔 5 秒），连续 2 次失败才降级到下一 Tier。
 
-### 优先级2：gh CLI
+### Tier 1：pytorch-community MCP（首选）
 
-若 GitHub MCP 不可用（未启用、token 无效、超时）：
+使用 pytorch-community MCP 工具进行采集。数据最完整、结构化程度最高。
+
+- PRs: `mcp__pytorch-community__get_prs`
+- Issues: `mcp__pytorch-community__get_issues`
+- RFCs: `mcp__pytorch-community__get_rfcs`
+- Commits: `mcp__pytorch-community__get_commits`
+
+### Tier 2：GitHub MCP
+
+若 pytorch-community MCP 不可用（连续 2 次失败）：
+- PRs: `mcp__github__list_pull_requests` / `mcp__github__search_pull_requests`
+- Issues: `mcp__github__list_issues` / `mcp__github__search_issues`
+- Releases: `mcp__github__list_releases` / `mcp__github__get_latest_release`
+- Commits: `mcp__github__list_commits`
+- 标注：数据可能不含 RFC 信息
+
+### Tier 3：gh CLI
+
+若 GitHub MCP 也不可用（连续 2 次失败）：
 - 使用 `gh` 命令行工具
 - 命令示例：`gh pr list --repo pytorch/pytorch --limit 100 --json number,title,author,createdAt,url,labels,comments --search "created:>2026-03-10"`
-- 标注：数据可能不含 Discussion
+- 标注：数据可能不含 Discussion 和 RFC
 
-### 优先级3：WebFetch（最后手段）
+### Tier 4：WebFetch（紧急降级）
 
 若 gh CLI 也不可用：
 - 通过 WebFetch 访问 `https://github.com/<repo>/pulls`、`/issues` 等页面
@@ -110,6 +151,6 @@ temperature: 0.1
 ### 降级标注
 
 降级发生时，在 Layer 1 输出中必须标注：
-- `status`: 实际使用的获取方式
-- `degradation_reason`: 降级原因（如 "GitHub MCP timeout"、"gh CLI not found"）
+- `status`: 实际使用的获取方式（如 "pytorch-community MCP"、"GitHub MCP"、"gh CLI"、"WebFetch"）
+- `degradation_reason`: 降级原因（如 "pytorch-community MCP 连续 2 次超时"）
 - `completeness_impact`: 数据完整性影响说明

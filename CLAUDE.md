@@ -27,12 +27,12 @@ opencode run \
 
 ### 可用模型（仅接受以下）
 
-| 模型 | model ID |
-|------|----------|
-| GLM-5 | `alibaba-cn/glm-5` |
-| MiniMax-M2.5 | `alibaba-cn/minimax-m2.5` |
-| Kimi K2.5 | `alibaba-cn/kimi-k2.5` |
-| Qwen3.5 Plus | `alibaba-cn/qwen3.5-plus` |
+| 模型 | model ID | 状态 |
+|------|----------|------|
+| Qwen3.5 Plus | `alibaba-cn/qwen3.5-plus` | ✅ 可用 |
+| GLM-5 | `alibaba-cn/glm-5` | ✅ 可用 |
+| Kimi K2.5 | `alibaba-cn/kimi-k2.5` | ✅ 可用 |
+| MiniMax-M2.5 | `alibaba-cn/minimax-m2.5` | ❌ 不可用 |
 
 ### 关键说明
 
@@ -41,7 +41,7 @@ opencode run \
 - stderr 包含格式化的进度输出（agent 调用链、tool 使用），stdout 包含最终文本结果
 - 日志文件位于 `/Users/chu/.local/share/opencode/log/`
 - 生成的报告在 `reports/` 目录下
-- 典型端到端运行时间：3-8 分钟（取决于模型和数据源数量）
+- 典型端到端运行时间：5-13 分钟（取决于模型、数据源数量和并发情况）
 - 可在后台运行并通过 `ps aux | grep opencode` 监控进程状态
 
 ### 更多 run 命令 flags
@@ -55,12 +55,84 @@ opencode run \
 | `--file <path>` | 附加文件到消息 |
 | `--attach <url>` | 连接到运行中的 `opencode serve` 实例（避免冷启动） |
 
-### 批量测试优化
+### 并发测试：使用 Server 模式（推荐）
 
-先启动 headless server 避免每次冷启动：
+多进程直接并发 `opencode run` 会共享 SQLite 数据库，导致 DB 锁争用和 subagent 崩溃。**并发测试必须使用 server 模式**。
+
+#### 启动 server
+
 ```bash
 opencode serve --port 4096 &
-opencode run --attach http://localhost:4096 --agent openinsight-orchestrator --model alibaba-cn/qwen3.5-plus -- "测试消息"
+# 验证 server 就绪
+curl -s http://localhost:4096/global/health
+# 预期输出: {"healthy":true,"version":"1.2.27"}
+```
+
+#### Server 模式 CLI flags
+
+| Flag | 说明 | 默认值 |
+|------|------|--------|
+| `--port` | 监听端口 | 4096 |
+| `--hostname` | 监听地址 | 127.0.0.1 |
+| `--cors` | 允许的浏览器 origin（可多次指定） | 无 |
+
+#### 并发执行测试
+
+```bash
+# 多个终端/后台进程同时 --attach 到同一 server
+opencode run --attach http://localhost:4096 \
+  --agent openinsight-orchestrator \
+  --model alibaba-cn/glm-5 \
+  -- "@user-prompt.md pytorch 最近1周 执行完整工作流生成报告。" \
+  2>/tmp/opencode-server-glm5-stderr.log \
+  1>/tmp/opencode-server-glm5-stdout.log &
+
+opencode run --attach http://localhost:4096 \
+  --agent openinsight-orchestrator \
+  --model alibaba-cn/qwen3.5-plus \
+  -- "@user-prompt.md pytorch 最近1周 执行完整工作流生成报告。" \
+  2>/tmp/opencode-server-qwen-stderr.log \
+  1>/tmp/opencode-server-qwen-stdout.log &
+
+wait  # 等待所有后台进程完成
+```
+
+#### Server API（高级用法）
+
+Server 暴露 RESTful API，可直接调用：
+
+```bash
+# 查看所有 session
+curl -s http://localhost:4096/session | python3 -m json.tool
+
+# 查看 session 详情（含消息）
+curl -s http://localhost:4096/session/<session-id>/message
+
+# 中止运行中的 session
+curl -s -X POST http://localhost:4096/session/<session-id>/abort
+
+# 查看 API 文档
+open http://localhost:4096/doc
+```
+
+#### 并发测试经验总结（2026-03-17 实测）
+
+| 对比项 | 多进程 `opencode run` | Server `--attach` |
+|--------|----------------------|-------------------|
+| 稳定性 | ❌ GLM-5 composer 并发崩溃 | ✅ 3 模型全部成功 |
+| 快模型(Qwen)速度 | 8m46s | **5m8s** (-42%) |
+| 慢模型(GLM/Kimi)速度 | 9-10m | 12-13m (+26-36%) |
+| DB 锁争用 | 有（共享 SQLite） | 无（单进程管理） |
+| 日志隔离 | ❌ 仅 1 个进程写入日志 | ✅ 统一日志 |
+
+**建议并发数 ≤ 2**：3 路并发时较慢模型性能退化明显，可能因 API rate limit 或 server 进程 CPU 争用。
+
+#### 停止 server
+
+```bash
+# 方法 1: 前台启动的用 Ctrl+C
+# 方法 2: 后台启动的
+kill $(lsof -ti:4096)
 ```
 
 ## OpenCode 日志分析

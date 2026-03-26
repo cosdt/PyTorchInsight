@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "pytorch-community": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/chu/project/openinsight_mcp",
+        "pytorch-community-mcp"
+      ]
+    }
+  }
+}

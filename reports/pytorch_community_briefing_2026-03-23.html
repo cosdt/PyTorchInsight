@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch 社区动态报告 - 2026-03-23</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-light: #e8f0fe;
+    --danger: #d93025;
+    --danger-light: #fce8e6;
+    --warning: #f9ab00;
+    --warning-light: #fef7e0;
+    --success: #1e8e3e;
+    --success-light: #e6f4ea;
+    --text: #202124;
+    --text-secondary: #5f6368;
+    --border: #dadce0;
+    --bg: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg-secondary);
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Header */
+  .report-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    color: white;
+    padding: 32px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .report-header h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+  .report-header .meta { font-size: 14px; opacity: 0.9; }
+  .report-header .focus-areas {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .report-header .focus-areas span {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-right: 8px;
+    margin-bottom: 4px;
+  }
+
+  /* Navigation */
+  .nav {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .nav a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .nav a:hover { text-decoration: underline; }
+
+  /* Section */
+  .section {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-light);
+  }
+  .section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 16px 0 8px 0;
+  }
+
+  /* Impact badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-high { background: var(--danger-light); color: var(--danger); }
+  .badge-medium { background: var(--warning-light); color: #e37400; }
+  .badge-low { background: var(--success-light); color: var(--success); }
+  .badge-npu { background: #e3f2fd; color: #1565c0; border: 1px solid #1565c0; }
+
+  /* Item card */
+  .item-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .item-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .item-card h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .item-card h3 a { color: var(--primary); text-decoration: none; }
+  .item-card h3 a:hover { text-decoration: underline; }
+  .item-card .item-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+  .item-card .item-summary { font-size: 14px; line-height: 1.6; }
+  .item-card .item-summary ul {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+  .item-card .item-summary li {
+    margin-bottom: 4px;
+  }
+  .item-card .item-action {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: var(--primary-light);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary);
+  }
+  .item-card .evidence {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .item-card .code-block {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 8px 0;
+    font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+    font-size: 12px;
+    overflow-x: auto;
+  }
+
+  /* Collapsible */
+  details { margin-bottom: 8px; }
+  details summary {
+    cursor: pointer;
+    font-weight: 500;
+    padding: 8px 0;
+    color: var(--text);
+  }
+  details summary:hover { color: var(--primary); }
+  details > div { padding: 8px 0 8px 16px; }
+
+  /* List items */
+  .dynamic-list { list-style: none; }
+  .dynamic-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .dynamic-list li:last-child { border-bottom: none; }
+  .dynamic-list .star { color: var(--warning); margin-right: 4px; }
+  .dynamic-list a { color: var(--primary); text-decoration: none; }
+  .dynamic-list a:hover { text-decoration: underline; }
+  .dynamic-list .date { color: var(--text-secondary); font-size: 12px; }
+  .dynamic-list .type-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    margin-right: 6px;
+  }
+
+  /* Data source status */
+  .source-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .source-ok { background: var(--success-light); }
+  .source-degraded { background: var(--warning-light); }
+  .source-failed { background: var(--danger-light); }
+  .source-icon { font-size: 16px; }
+
+  /* Insight box */
+  .insight-box {
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+  }
+  .insight-box h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--primary);
+  }
+  .insight-box ul {
+    margin: 6px 0;
+    padding-left: 18px;
+  }
+  .insight-box li {
+    margin-bottom: 4px;
+  }
+
+  /* Priority tags */
+  .priority-p0 { color: var(--danger); font-weight: 600; }
+  .priority-p1 { color: #e37400; font-weight: 600; }
+  .priority-p2 { color: var(--success); font-weight: 600; }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-item {
+    background: var(--bg-secondary);
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .stat-item .number {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .stat-item .label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* Category section */
+  .category-section {
+    margin-bottom: 20px;
+  }
+  .category-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+  }
+
+  /* Footer */
+  .report-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    background: #fff3e0;
+    border: 1px solid #ff9800;
+    border-radius: 8px;
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .highlight-box h4 {
+    color: #e65100;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  th, td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="report-header">
+    <h1>PyTorch 社区动态报告</h1>
+    <div class="meta">
+      时间窗口：2026-03-20 至 2026-03-23（3天） | 生成日期：2026-03-23
+    </div>
+    <div class="focus-areas">
+      <span>算子兼容性</span>
+      <span>编译器后端</span>
+      <span>Distributed Training</span>
+      <span>NPU 适配</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <a href="#executive-summary">Executive Summary</a>
+    <a href="#high-value">高价值动态</a>
+    <a href="#insights">跨动态洞察</a>
+    <a href="#all-dynamics">分类动态列表</a>
+    <a href="#data-sources">数据源状态</a>
+    <a href="#recommendations">行动建议</a>
+  </nav>
+
+  <!-- Executive Summary -->
+  <div class="section" id="executive-summary">
+    <h2>Executive Summary</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="number">332</div>
+        <div class="label">采集动态总数</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">7</div>
+        <div class="label">高价值项目</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">4</div>
+        <div class="label">NPU 直接相关</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">3</div>
+        <div class="label">Critical 级别</div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <h4>🚨 NPU 团队重点关注</h4>
+      <p>本周 PyTorch 社区有 <strong>4 项与 NPU 适配直接相关的变更</strong>，其中 2 项为 Critical 级别，建议立即跟进测试。</p>
+    </div>
+
+    <h3>关键发现</h3>
+    <ul style="margin-left: 20px; line-height: 1.8;">
+      <li><strong>PrivateUse1 后端重大改进</strong>：PyTorch 正在积极完善 PrivateUse1（自定义后端，包括 NPU）支持。PR #178020 修复了 embedded constants 初始化问题，Issue #178019 修复了 FakeTensor 设备尊重问题——这两项是 NPU 支持 torch.compile 的必要条件。</li>
+      <li><strong>数值稳定性聚焦</strong>：社区正在积极修复数值正确性问题。PR #178123 修复了 normalization layers 的 float32 溢出，PR #178016 修复了整数 floor_divide 的零除数行为——NPU 后端需要验证实现一致性。</li>
+      <li><strong>分布式 + 编译融合</strong>：PyTorch 2.x 的核心方向是分布式训练与编译的融合。PR #178116 等 10 个堆叠 PR 为 DTensor 添加编译支持，引入 Opaque Object 模式——NPU 团队应了解此架构演进。</li>
+      <li><strong>AMD/ROCm 作为 NPU 参考</strong>：PR #178023 修复了 AMD MI350 的 num_warps 限制，为类似架构的 NPU 提供了硬件限制处理的参考模式。</li>
+      <li><strong>社区活跃度</strong>：3 天内 332 条动态，其中分布式训练 22 项、编译器后端 28 项、算子兼容性 15 项，社区对 PyTorch 2.x 新架构的投入持续高强度。</li>
+    </ul>
+  </div>
+
+  <!-- High Value Items -->
+  <div class="section" id="high-value">
+    <h2>高价值动态详情</h2>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+      按影响等级排序，包含代码级分析详情。标有 <span class="badge badge-npu">NPU</span> 的条目与 NPU 适配直接相关。
+    </p>
+
+    <!-- Item 1 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-high">CRITICAL</span>
+        <span class="badge badge-npu">NPU</span>
+        <a href="https://github.com/pytorch/pytorch/pull/178123">#178123 - Fix float32 overflow in variance computation for normalization layers</a>
+      </h3>
+      <div class="item-meta">Pull Request · 作者: gaurav-redhat · 日期: 2026-03-23 · 标签: module: cpu, release notes: nn</div>
+      
+      <div class="item-summary">
+        <p><strong>问题</strong>：BatchNorm、LayerNorm、GroupNorm、InstanceNorm 在 float32 大数值输入时（约 1e30），Welford 在线算法的方差计算会溢出为 inf，导致输出 NaN。</p>
+        
+        <p><strong>解决方案</strong>：对 float32 输入使用 float64 累加器进行 Welford 计算，保持向后兼容。</p>
+        
+        <div class="code-block">// 核心修复：累加器精度提升
+template &lt;typename T&gt;
+using acc_type = typename std::conditional&lt;
+    std::is_same&lt;T, float&gt;::value,
+    double,  // Promote float32 to float64
+    T        // Keep other types as-is
+&gt;::type;</div>
+        
+        <p><strong>影响文件</strong>：batch_norm_kernel.cpp, layer_norm_kernel.cpp, group_norm_kernel.cpp, Normalization.cuh</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p0">[P0]</span> NPU 团队行动：检查 NPU normalization 实现是否使用累加器提升；在 NPU 测试套件中添加大数值输入测试。
+      </div>
+      <div class="evidence">信息来源: PR diff, 代码分析</div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-high">CRITICAL</span>
+        <span class="badge badge-npu">NPU</span>
+        <a href="https://github.com/pytorch/pytorch/pull/178020">#178020 - Enable initializing embedded constants on privateuse1 backend</a>
+      </h3>
+      <div class="item-meta">Pull Request · 作者: arfaian · 日期: 2026-03-20 · 标签: open source</div>
+      
+      <div class="item-summary">
+        <p><strong>问题</strong>：FakeTensor.avoid_device_init 机制不尊重 PrivateUse1 后端，导致 embedded constants 被错误地放在 CPU 而非目标设备，使 torch.compile 在 NPU 上无法工作。</p>
+        
+        <div class="code-block">// 修复前：总是回退到 CPU
+if self.avoid_device_init:
+    return tensor.cpu()
+
+// 修复后：检查 PrivateUse1 后端注册
+if self.avoid_device_init:
+    if device.type == 'privateuse1' and torch._C._is_privateuse1_backend_registered():
+        return tensor.to(device)  // 正确行为
+    return tensor.cpu()</div>
+        
+        <p><strong>关键影响</strong>：这是 NPU 支持 torch.compile 的必要条件，直接影响 NPU 后端的编译功能可用性。</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p0">[P0]</span> NPU 团队行动：立即在 NPU 后端测试此 PR，验证 embedded constants 正确放置；运行完整 torch.compile 测试套件。
+      </div>
+      <div class="evidence">信息来源: PR diff, Issue #178019, 代码分析</div>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-high">CRITICAL</span>
+        <span class="badge badge-npu">NPU</span>
+        <a href="https://github.com/pytorch/pytorch/issues/178019">#178019 - FakeTensor.avoid_device_init not respecting privateuse1 backend</a>
+      </h3>
+      <div class="item-meta">Issue · 作者: arfaian · 日期: 2026-03-20 · 标签: module: backend, module: fakeTensor, module: PrivateUse1</div>
+      
+      <div class="item-summary">
+        <p><strong>问题描述</strong>：在 FakeTensor 模式下创建 embedded constants 时，即使指定了自定义设备，张量也会被错误地放置在 CPU 上，导致设备不匹配错误。</p>
+        
+        <div class="code-block">// 复现代码
+def simple(x):
+    c = torch.tensor([1, 2, 3], device=x.device)
+    return x + c
+
+x = torch.tensor([1, 2, 3], device=my_custom_device)
+model = torch.compile(simple, backend=my_custom_backend)
+out = model(x)  // c 被放在 CPU 而不是 my_custom_device！</div>
+        
+        <p><strong>解决方案</strong>：PR #178020 已提供修复，等待合并。</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p0">[P0]</span> NPU 团队行动：跟踪 PR #178020 合并状态；在 NPU 后端应用补丁验证修复效果；临时 workaround：使用 FakeTensorMode(avoid_device_init=False)。
+      </div>
+      <div class="evidence">信息来源: Issue body, PR #178020</div>
+    </div>
+
+    <!-- Item 4 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-high">HIGH</span>
+        <a href="https://github.com/pytorch/pytorch/pull/178116">#178116 - Add _dtensor::mesh_get_process_group custom op</a>
+      </h3>
+      <div class="item-meta">Pull Request · 作者: aorenste · 日期: 2026-03-23 · 标签: module: inductor, release notes: distributed (dtensor)</div>
+      
+      <div class="item-summary">
+        <p><strong>背景</strong>：compile_on_one_rank 是 PyTorch 分布式训练的重要优化，允许在一个 rank 上编译模型，然后在所有 rank 上执行。</p>
+        
+        <p><strong>问题</strong>：DeviceMesh 包含 ProcessGroup 对象，这是"不透明对象"（Opaque Object），不能直接通过 FX 图流式传输。之前的实现通过字符串名称查找 ProcessGroup，导致运行时开销和跨 rank 输出代码不一致。</p>
+        
+        <div class="code-block">// 新的自定义操作
+@torch.library.custom_op("_dtensor::mesh_get_process_group", mutates_args=())
+def mesh_get_process_group(mesh: DeviceMesh, dim: int) -> ProcessGroup:
+    return mesh.get_process_group(dim)</div>
+        
+        <p><strong>架构意义</strong>：此 PR 是 10 个 PR 堆栈的一部分，引入了 PyTorch 对"不透明对象"作为图输入的全面支持。NPU 特定的对象（如 NPUStream、NPUEvent）可以类似地作为不透明对象支持。</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p1">[P1]</span> NPU 团队行动：了解 OpaqueObjectState IR 节点设计；评估 NPU 自定义对象是否需要类似支持；测试 DTensor + torch.compile 在 NPU 上的兼容性。
+      </div>
+      <div class="evidence">信息来源: PR diff, 堆栈上下文分析</div>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-high">HIGH</span>
+        <a href="https://github.com/pytorch/pytorch/pull/178016">#178016 - Fix eager/compiled mismatch for integer floor_divide with zero divisor</a>
+      </h3>
+      <div class="item-meta">Pull Request · 作者: dcci · 日期: 2026-03-20 · 标签: module: inductor, release notes: inductor</div>
+      
+      <div class="item-summary">
+        <p><strong>问题</strong>：CUDA 上整数 floor_divide 在除数为零时，eager 模式返回 0，compiled 模式返回 -1，存在静默正确性差异。</p>
+        
+        <div class="code-block">// 修复策略：统一两种路径的零除数行为
+// Eager 路径 (c10::div_floor_integer)
+if (b == 0) return 0;
+
+// Compiled 路径 (Triton)
+tl.where(b == 0, 0, tl.floordiv(a, b))</div>
+        
+        <p><strong>修复范围</strong>：CPU kernel (BinaryOpsKernel.cpp) 和 Triton codegen (triton.py) 均添加零除数检查。</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p1">[P1]</span> NPU 团队行动：检查 NPU 后端整数 floor_divide 实现；验证零除数行为是否与 PyTorch 一致（应返回 0）；添加测试用例覆盖零除数场景。
+      </div>
+      <div class="evidence">信息来源: PR diff, Issue #178013</div>
+    </div>
+
+    <!-- Item 6 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-high">HIGH</span>
+        <span class="badge badge-npu">NPU</span>
+        <a href="https://github.com/pytorch/pytorch/pull/178023">#178023 - [AMD] Fix num_warps when max_autotune is enabled on HIP</a>
+      </h3>
+      <div class="item-meta">Pull Request · 作者: yvonne-lab · 日期: 2026-03-20 · 标签: module: inductor, ciflow/inductor</div>
+      
+      <div class="item-summary">
+        <p><strong>问题</strong>：AMD MI350 上启用 max_autotune 时，num_warps=32 导致 threads_per_workgroup=2048（32×64），超过硬件限制 1024，引发启动失败。</p>
+        
+        <div class="code-block">// 修复：平台特定的 num_warps 限制
+def get_max_num_warps_for_platform():
+    if torch.version.hip:  // AMD/HIP
+        return 16  // 16 * 64 = 1024
+    else:  // NVIDIA/CUDA
+        return 32  // 32 * 32 = 1024</div>
+        
+        <p><strong>NPU 参考价值</strong>：NPU 通常也有特定的 warp/wavefront 大小和线程限制。此修复提供了平台特定配置限制的参考模式。</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p1">[P1]</span> NPU 团队行动：分析 NPU 线程组织模型（warp 大小、最大线程数）；审查当前 NPU 自动调优配置是否超出硬件限制；实现 NPU 特定的 num_warps 限制。
+      </div>
+      <div class="evidence">信息来源: PR diff, 硬件规格分析</div>
+    </div>
+
+    <!-- Item 7 -->
+    <div class="item-card">
+      <h3>
+        <span class="badge badge-medium">MEDIUM</span>
+        <a href="https://github.com/pytorch/pytorch/issues/178066">#178066 - [RFC] All-to-all permute for Ulysses Parallel</a>
+      </h3>
+      <div class="item-meta">Issue (RFC) · 作者: kwen2501 · 日期: 2026-03-21 · 标签: oncall: distributed</div>
+      
+      <div class="item-summary">
+        <p><strong>背景</strong>：Ulysses Parallel (UP) 是一种针对 Transformer 注意力模块的优化，用于处理长序列（常见于多模态训练）。核心思想是通过 all-to-all 通信在序列维度和 head 维度之间交换数据。</p>
+        
+        <div class="code-block">// 提议的新 API
+def all_to_all_permute(
+    input: torch.Tensor,
+    group: ProcessGroup,
+    scatter_dim: int,  // 通常是序列维度
+    gather_dim: int,   // 通常是 head 维度
+) -> torch.Tensor:</div>
+        
+        <p><strong>优势</strong>：比 Ring Attention 通信更少（2 次 all-to-all vs P-1 次点对点），与 Tensor Parallel 正交可组合。</p>
+      </div>
+      
+      <div class="item-action">
+        <span class="priority-p2">[P2]</span> NPU 团队行动：跟踪 RFC 讨论和决策；评估 NPU all-to-all 性能是否适合 Ulysses Parallel；如 RFC 被接受，优化 NPU 的 all_to_all_permute 实现。
+      </div>
+      <div class="evidence">信息来源: RFC Issue, 社区讨论</div>
+    </div>
+  </div>
+
+  <!-- Cross-Item Insights -->
+  <div class="section" id="insights">
+    <h2>跨动态洞察</h2>
+
+    <div class="insight-box">
+      <h4>🔥 模块级趋势：PrivateUse1 后端成熟度提升</h4>
+      <p>PyTorch 正在积极改进 PrivateUse1（自定义后端，包括 NPU）的支持，本周多个相关变更：</p>
+      <ul>
+        <li><strong>#178020</strong>：embedded constants 初始化修复</li>
+        <li><strong>#178019</strong>：FakeTensor 设备尊重问题</li>
+        <li><strong>#177968</strong>：自定义精度/容差支持请求</li>
+      </ul>
+      <p><strong>NPU 启示</strong>：NPU 适配者应关注这些变更，它们直接影响自定义后端的稳定性和功能完整性。</p>
+    </div>
+
+    <div class="insight-box">
+      <h4>🔥 模块级趋势：FP8/低精度支持快速成熟</h4>
+      <p>社区对 FP8 数据类型的支持正在快速成熟：</p>
+      <ul>
+        <li><strong>#178123</strong>：normalization layers 的 float32 溢出修复</li>
+        <li><strong>#178060</strong>：FP8 nan_asserts 修复</li>
+        <li><strong>#178101</strong>：FP8 blendv 支持</li>
+        <li><strong>#178034</strong>：fused Adam FP16/BF16 支持</li>
+      </ul>
+      <p><strong>NPU 启示</strong>：FP8 支持仍有边缘情况需要处理，NPU 后端实现 FP8 时需要特别注意数值稳定性。</p>
+    </div>
+
+    <div class="insight-box">
+      <h4>🔥 模块级趋势：Distributed + Compilation 融合</h4>
+      <p>PyTorch 正在大力推进分布式训练与编译的融合（torch.compile + distributed），这是 2.x 版本的核心方向：</p>
+      <ul>
+        <li><strong>#178116-#178107</strong>：DTensor 编译支持栈（10 个 PR）</li>
+        <li><strong>Opaque Object 支持</strong>：ProcessGroup 作为不透明对象流式处理</li>
+        <li><strong>compile_on_one_rank</strong>：分布式编译优化</li>
+      </ul>
+      <p><strong>NPU 启示</strong>：NPU 团队应了解此架构演进，评估 NPU 分布式训练与编译的兼容性。</p>
+    </div>
+
+    <div class="insight-box">
+      <h4>👥 关键人物活动</h4>
+      <ul>
+        <li><strong>aorenste (Meta)</strong>：10 个堆叠 PR 推动 DTensor/Opaque 对象支持，聚焦分布式训练编译支持</li>
+        <li><strong>kwen2501 (Meta)</strong>：FSDP 优化 + Ulysses Parallel RFC，聚焦分布式训练性能</li>
+        <li><strong>dcci</strong>：Inductor floordiv 修复、整数 floor_divide 修复，聚焦数值正确性</li>
+      </ul>
+    </div>
+
+    <div class="insight-box">
+      <h4>💡 AMD/ROCm 作为 NPU 参考</h4>
+      <p>AMD/HIP 后端的修复为 NPU 提供了有价值的参考：</p>
+      <ul>
+        <li><strong>#178023</strong>：num_warps 硬件限制处理</li>
+        <li><strong>#176675</strong>：pointer_range 注解</li>
+        <li><strong>#177574</strong>：Reduction config 过滤</li>
+      </ul>
+      <p><strong>NPU 启示</strong>：NPU 团队应跟踪类似问题，实现平台特定的配置限制。</p>
+    </div>
+  </div>
+
+  <!-- Categorized Dynamic List -->
+  <div class="section" id="all-dynamics">
+    <h2>分类动态列表</h2>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+      按关注领域分类的完整动态列表。标有 ⭐ 的为高价值项目。
+    </p>
+
+    <!-- Operator Compatibility -->
+    <div class="category-section">
+      <h3>📦 算子兼容性 (15 项)</h3>
+      <ul class="dynamic-list">
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178123">#178123</a> Fix float32 overflow in variance computation for normalization layers <span class="date">2026-03-23</span> <span class="badge badge-high">CRITICAL</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178101">#178101</a> Add blendv support for float8 vectorized types on AVX-512 <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178034">#178034</a> optim: support FP16/BF16 params in fused Adam via FP32 master weights <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178129">#178129</a> [XPU] Remove @expectedFailureXPU from test_max_pool2d_with_indices_backward5 <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178031">#178031</a> [MPS] Add adaptive_avg_pool3d support for MPS <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178035">#178035</a> [functorch] Add vmap batching rule for aten::unbind_copy.int <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178020">#178020</a> [torch.compile] Enable initializing embedded constants on privateuse1 backend <span class="date">2026-03-20</span> <span class="badge badge-high">CRITICAL</span> <span class="badge badge-npu">NPU</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178102">#178102</a> [C10] Incorrect channels-last contiguity flag handling <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178019">#178019</a> FakeTensor.avoid_device_init not respecting privateuse1 backend <span class="date">2026-03-20</span> <span class="badge badge-high">CRITICAL</span> <span class="badge badge-npu">NPU</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/177968">#177968</a> Add custom precision or tolerance support for out of tree backends <span class="date">2026-03-20</span> <span class="badge badge-npu">NPU</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178128">#178128</a> conv_transpose3d meta execution produces output for invalid bias shape <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178127">#178127</a> conv_transpose2d meta execution fails to validate invalid output_padding <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178125">#178125</a> conv_transpose1d meta implementation allows invalid output_padding <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178055">#178055</a> torch.compile produces Inf on valid float32 boundary inputs <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178059">#178059</a> Switching from CPU float32 to CUDA float32 introduces NaN/Inf <span class="date">2026-03-23</span></li>
+      </ul>
+    </div>
+
+    <!-- Compiler Backend -->
+    <div class="category-section">
+      <h3>⚙️ 编译器后端 (28 项)</h3>
+      <ul class="dynamic-list">
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178130">#178130</a> [Inductor][CUTLASS] Use shlex.join() to properly quote compiler arguments <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178119">#178119</a> Fix deterministic empty allocation paths in Inductor <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178122">#178122</a> Enable B018 and B019 flake8-bugbear lint rules <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178104">#178104</a> Fix torch.compile performance regression for cumprod backward <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178098">#178098</a> [Inductor] Fix CompiledFunctionBackward shape mismatch <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178048">#178048</a> [inductor] Add custom_pass_context for scoped custom pass registration <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178060">#178060</a> [inductor] Fix nan_asserts for FP8 dtypes <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178032">#178032</a> [inductor] Avoid aliasing mutated cat results <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178017">#178017</a> [inductor][auto_chunker] Add gather/scatter propagation <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178016">#178016</a> Fix eager/compiled mismatch for integer floor_divide <span class="date">2026-03-20</span> <span class="badge badge-high">HIGH</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178023">#178023</a> [AMD] Fix num_warps when max_autotune is enabled on HIP <span class="date">2026-03-20</span> <span class="badge badge-high">HIGH</span> <span class="badge badge-npu">NPU</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178074">#178074</a> [inductor] Add env var for max_epilogue_benchmarked_choices <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/176505">#176505</a> [inductor][auto_chunker] Add support for amax backward <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/177922">#177922</a> [inductor] Add inline_asm_elementwise higher-order operator <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/177926">#177926</a> [Inductor] Fix incorrect rounding of floordiv <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/176675">#176675</a> [ROCm][Inductor] Emit tt.pointer_range=32 for small tensors <span class="date">2026-03-23</span> <span class="badge badge-npu">NPU</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178096">#178096</a> torch.compile(dynamic=True) on CUDA: large eager vs compiled mismatch <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178095">#178095</a> [Inductor CPU] Compilation fails when converting bool to float8_e4m3fn <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178084">#178084</a> torch.compile introduces NaN in LayerNorm on valid float32 boundary <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178080">#178080</a> CompiledFunctionBackward RuntimeError with norm-like operation <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178045">#178045</a> torch.compile produces different uint8 output from ceil(log2(...)) <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178046">#178046</a> torch.compile silently accepts nn.Parameter as fill_value <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178047">#178047</a> torch.compile produces numerically different results for addmm fusion <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178013">#178013</a> Eager and compile disagree for integer floor_divide with zero divisor <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178039">#178039</a> torch.compile crashes with FakeTensor view stride error <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Commit</span>a1a09e0 [Inductor] Parallelize PTX-to-fatbin compilation <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Commit</span>b3adc45 [inductor] Batch cubin-to-obj conversion using .incbin <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Commit</span>d428a3f Filter ALL reduction configs by max_persistent_rblock on AMD HIP <span class="date">2026-03-23</span> <span class="badge badge-npu">NPU</span></li>
+      </ul>
+    </div>
+
+    <!-- Distributed Training -->
+    <div class="category-section">
+      <h3>🌐 分布式训练 (22 项)</h3>
+      <ul class="dynamic-list">
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178116">#178116</a> [coor] Add _dtensor::mesh_get_process_group custom op <span class="date">2026-03-23</span> <span class="badge badge-high">HIGH</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178115">#178115</a> [coor] fully flatten DTensorSpec in __tensor_flatten__ <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178114">#178114</a> [opaque] Add OpaqueObjectState for opaque objects as inductor inputs <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178112">#178112</a> [opaque] Support opaque objects in AOT autograd graph partitioning <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178110">#178110</a> [coor] Fix DeviceMesh _sym_get_coordinate crash <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178108">#178108</a> [coor] Fix _extract_distributed_info crash when group_name is FX Node <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178078">#178078</a> Fix FakeProcessGroup collectives leaving output uninitialized <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178075">#178075</a> [FSDP2] support non-float parameters <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178054">#178054</a> Fixes conflict between broadcast_buffers and init_sync <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178069">#178069</a> [docs] Add examples to reduce_scatter documentation <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178068">#178068</a> [docs] Add comprehensive introduction to PyTorch Elastic <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178071">#178071</a> [python/3.10 removal] Remove CPython 3.10 holdback for rendezvous tests <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">PR</span><a href="https://github.com/pytorch/pytorch/pull/178093">#178093</a> bazel 7.7.0 and clang support <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178066">#178066</a> [RFC] All-to-all permute for Ulysses Parallel <span class="date">2026-03-21</span> <span class="badge badge-medium">MEDIUM</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178085">#178085</a> DDP mode: CUDA error: an illegal memory access was encountered <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/178091">#178091</a> propagate_single_input_strategy copies input tensor_meta to output <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/177972">#177972</a> [DTensor] Dead double-shard validation in propagate_shape_and_sharding <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Issue</span><a href="https://github.com/pytorch/pytorch/issues/177959">#177959</a> dist.new_group with use_local_synchronization=True hangs with Gloo <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Commit</span>0ce1ca5 [FSDP2] support non-float parameters <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Commit</span>0535c23 Use SymmMem for reduce-scatter in FSDP <span class="date">2026-03-23</span></li>
+        <li><span class="star">⭐</span><span class="type-tag">Commit</span>4d72464 Enable Copy Engine all-gather in FSDP <span class="date">2026-03-23</span></li>
+        <li><span class="type-tag">Discourse</span><a href="https://discuss.pytorch.org/t/224729">224729</a> MCCL: First Native MPS distributed backend <span class="date">2026-03-23</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Data Source Status -->
+  <div class="section" id="data-sources">
+    <h2>数据源覆盖状态</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="number">325</div>
+        <div class="label">GitHub 动态</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">6</div>
+        <div class="label">Discourse 讨论</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">1</div>
+        <div class="label">Blog 文章</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">332</div>
+        <div class="label">融合后总数</div>
+      </div>
+    </div>
+
+    <h3>采集状态详情</h3>
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      <div>
+        <strong>GitHub pytorch/pytorch</strong><br>
+        <span style="font-size: 13px; color: var(--text-secondary);">
+          PRs: 161 条 (100 条已获取，61 条截断) | Issues: 52 条 | Commits: 112 条 (100 条已获取，12 条截断)
+        </span>
+      </div>
+    </div>
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      <div>
+        <strong>Discourse dev-discuss</strong><br>
+        <span style="font-size: 13px; color: var(--text-secondary);">6 条讨论，全部获取</span>
+      </div>
+    </div>
+    <div class="source-status source-ok">
+      <span class="source-icon">✅</span>
+      <div>
+        <strong>PyTorch Blog</strong><br>
+        <span style="font-size: 13px; color: var(--text-secondary);">1 篇文章，全部获取</span>
+      </div>
+    </div>
+    <div class="source-status source-degraded">
+      <span class="source-icon">⏭️</span>
+      <div>
+        <strong>Slack</strong><br>
+        <span style="font-size: 13px; color: var(--text-secondary);">未配置，已跳过</span>
+      </div>
+    </div>
+
+    <h3>数据质量说明</h3>
+    <ul style="margin-left: 20px; font-size: 14px; line-height: 1.8;">
+      <li>去重前 332 条动态，去重后 332 条（无完全重复 URL）</li>
+      <li>高价值项目筛选：7 条（基于 NPU 适配相关性、breaking changes、API 变更等标准）</li>
+      <li>按关注领域分布：算子兼容性 15 条、编译器后端 28 条、分布式训练 22 条</li>
+    </ul>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="section" id="recommendations">
+    <h2>NPU 团队行动建议</h2>
+
+    <div class="highlight-box">
+      <h4>🚨 立即行动 (P0) - 本周内完成</h4>
+      <table>
+        <tr>
+          <th>优先级</th>
+          <th>行动项</th>
+          <th>相关动态</th>
+        </tr>
+        <tr>
+          <td class="priority-p0">P0</td>
+          <td>测试 PR #178020 修复效果，验证 embedded constants 在 NPU 上正确放置</td>
+          <td>#178020, #178019</td>
+        </tr>
+        <tr>
+          <td class="priority-p0">P0</td>
+          <td>跟踪 Issue #178019 修复状态，在 NPU 后端应用补丁验证</td>
+          <td>#178019</td>
+        </tr>
+        <tr>
+          <td class="priority-p0">P0</td>
+          <td>检查 NPU normalization 实现是否使用累加器提升（参考 #178123）</td>
+          <td>#178123</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="background: #fff8e1; border: 1px solid #ffc107; border-radius: 8px; padding: 14px; margin: 12px 0;">
+      <h4 style="color: #f57c00; font-size: 14px; margin-bottom: 8px;">⚡ 短期行动 (P1) - 两周内完成</h4>
+      <table>
+        <tr>
+          <th>优先级</th>
+          <th>行动项</th>
+          <th>相关动态</th>
+        </tr>
+        <tr>
+          <td class="priority-p1">P1</td>
+          <td>分析 NPU 线程组织模型，实现类似 #178023 的 num_warps 限制</td>
+          <td>#178023</td>
+        </tr>
+        <tr>
+          <td class="priority-p1">P1</td>
+          <td>验证 NPU 整数 floor_divide 零除数行为，确保与 PyTorch 一致</td>
+          <td>#178016</td>
+        </tr>
+        <tr>
+          <td class="priority-p1">P1</td>
+          <td>测试 DTensor + torch.compile 在 NPU 上的兼容性</td>
+          <td>#178116</td>
+        </tr>
+        <tr>
+          <td class="priority-p1">P1</td>
+          <td>评估 NPU all-to-all 性能是否适合 Ulysses Parallel</td>
+          <td>#178066</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="background: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 14px; margin: 12px 0;">
+      <h4 style="color: #2e7d32; font-size: 14px; margin-bottom: 8px;">📋 中期行动 (P2) - 一个月内完成</h4>
+      <table>
+        <tr>
+          <th>优先级</th>
+          <th>行动项</th>
+          <th>相关动态</th>
+        </tr>
+        <tr>
+          <td class="priority-p2">P2</td>
+          <td>探索 NPU 自定义对象（NPUStream、NPUEvent）的 Opaque Object 支持</td>
+          <td>#178114</td>
+        </tr>
+        <tr>
+          <td class="priority-p2">P2</td>
+          <td>评估 NPU 上 torch.compile 的性能收益，更新文档</td>
+          <td>#178020</td>
+        </tr>
+        <tr>
+          <td class="priority-p2">P2</td>
+          <td>研究 Ulysses + Ring 混合策略在 NPU 上的可行性</td>
+          <td>#178066</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="report-footer">
+    由 OpenInsight Multi-Agent System 自动生成 | PyTorch Community Briefing | 2026-03-23
+  </div>
+
+</div>
+
+</body>
+</html>

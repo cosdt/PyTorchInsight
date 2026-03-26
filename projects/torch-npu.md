@@ -31,4 +31,5 @@
 - local_analysis_enabled: true
 - repo_cache_dir: .cache/openinsight/repos
 - worktree_dir: .cache/openinsight/worktrees
+- default_branch: master
 

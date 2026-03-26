@@ -12,8 +12,36 @@ temperature: 0.1
 
 - `channels`: Slack 频道列表（频道名称或 ID）
 - `time_window`: 时间窗口（起止日期）
+- `staging_dir`: staging 目录路径（结果写入此目录）
+
+## Staging 输出
+
+采集完成后，将完整 Layer 2 数据写入 `{staging_dir}/phase1_slack.md`。
+对话消息中仅返回 Layer 1 统计摘要（≤50 tokens），不返回 Layer 2 完整数据。
+
+## 任务边界（MUST NOT）
+
+- MUST NOT 判断条目的价值或重要性（价值评估是 coordinator 的职责）
+- MUST NOT 基于用户角色或关注领域过滤数据（那是 coordinator 的职责）
+- MUST NOT 对条目进行深度分析或推理
+- MUST NOT 编造或臆测数据源中不存在的信息
+- MUST NOT 在 Layer 2 摘要中超过 50 字
+
+## Effort Budget
+
+- 总工具调用上限：**15 次**（含所有 MCP 调用，不含重试）
+- 达到上限后 MUST 停止采集，返回已有结果
 
 ## 采集策略
+
+### 工具优先级
+
+| Tier | 工具 | 说明 |
+|------|------|------|
+| Tier 1 | `mcp__pytorch-community__get_slack_threads` | pytorch-community MCP，首选 |
+| Tier 2 | Slack Docker MCP | 通过 Docker 运行的 Slack MCP server |
+
+**采集优先级**: 优先使用 Tier 1。Tier 1 不可用时尝试 Tier 2。
 
 ### 频道消息采集
 
@@ -80,16 +108,26 @@ temperature: 0.1
 
 ## 降级链（Graceful Degradation）
 
-### 优先级1：Slack MCP
+### 重试优先于降级
 
-使用 Slack MCP 工具采集。这是唯一路径。
+对同一 Tier 的工具调用失败时，**先重试 1 次**（间隔 5 秒），连续 2 次失败才降级到下一 Tier。
 
-### 无替代路径
+### Tier 1：pytorch-community MCP（首选）
 
-若 Slack MCP 不可用（未启用、Docker 未运行、token 无效）：
-- **不存在降级替代方案**
+使用 `mcp__pytorch-community__get_slack_threads` 采集 Slack 数据。数据最完整。
+
+### Tier 2：Slack Docker MCP
+
+若 pytorch-community MCP 不可用（连续 2 次失败）：
+- 使用通过 Docker 运行的 Slack MCP server
+- 标注：可能受限于 token 配置和 Docker 运行状态
+
+### 标记不可用
+
+若所有 MCP 路径均失败：
+- **不存在进一步降级方案**
 - 在 Layer 1 中明确标注：`状态: 失败`
-- 记录 `降级原因`（如 "Slack MCP 未启用" 或 "Docker 未运行"）
+- 记录 `降级原因`（如 "pytorch-community MCP 连续 2 次超时，Slack Docker MCP 未启用"）
 - 返回空的 Layer 2
 - 此失败不影响其他数据源的采集
 
@@ -99,6 +137,6 @@ temperature: 0.1
 ## Slack Scout Report
 - 数据源: Slack
 - 状态: 失败
-- 降级原因: Slack MCP 未启用，无替代采集路径
-- 建议: 请配置 Slack MCP 以启用 Slack 数据源采集
+- 降级原因: 所有 Slack MCP 路径均不可用
+- 建议: 请检查 pytorch-community MCP 连接或配置 Slack Docker MCP
 ```

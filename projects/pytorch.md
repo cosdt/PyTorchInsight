@@ -41,7 +41,8 @@
       ref: v2.7.1
 
 ## Local Cache Policy
-- local_analysis_enabled: false
+- local_analysis_enabled: true
 - repo_cache_dir: .cache/openinsight/repos
 - worktree_dir: .cache/openinsight/worktrees
+- default_branch: main
 
