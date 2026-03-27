@@ -1,4 +1,4 @@
-# OpenInsight 需求规格
+# PyTorchInsight 需求规格
 
 ## 用户
 

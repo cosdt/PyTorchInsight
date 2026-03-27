@@ -1,4 +1,4 @@
-# OpenInsight Briefing Style Guide
+# PyTorchInsight Briefing Style Guide
 
 ## 报告格式
 
@@ -105,5 +105,5 @@
 ## 报告尾部
 
 ```markdown
-*由 OpenInsight Multi-Agent System 自动生成 | Powered by OpenCode*
+*由 PyTorchInsight Multi-Agent System 自动生成 | Powered by OpenCode*
 ```

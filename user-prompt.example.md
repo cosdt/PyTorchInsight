@@ -1,7 +1,7 @@
 # 用户画像模板
 
 <!--
-  这个文件描述你的角色和关注领域，OpenInsight 会根据它生成个性化报告。
+  这个文件描述你的角色和关注领域，PyTorchInsight 会根据它生成个性化报告。
   使用方式：cp user-prompt.example.md user-prompt.md，然后修改下面的内容。
 -->
 

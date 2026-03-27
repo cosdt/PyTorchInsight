@@ -89,4 +89,4 @@
 
 ---
 
-*由 OpenInsight Multi-Agent System 自动生成 | Powered by OpenCode*
+*由 PyTorchInsight Multi-Agent System 自动生成 | Powered by OpenCode*

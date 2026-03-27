@@ -9,7 +9,7 @@ cp opencode.json.example opencode.json
 cp .mcp.json.example .mcp.json
 ```
 
-Edit both files to replace `<path-to-openinsight-mcp>` with the absolute path to your local [openinsight_mcp](https://github.com/cosdt/openinsight_mcp) clone, and `<your-github-pat>` with your GitHub Personal Access Token.
+Edit both files to replace `<path-to-pytorchinsight>` with the absolute path to your local PyTorchInsight clone, and `<your-github-pat>` with your GitHub Personal Access Token.
 
 ## Installation
 
@@ -67,7 +67,7 @@ Add to your MCP settings (works from any directory):
   "mcpServers": {
     "pytorch-community": {
       "command": "uv",
-      "args": ["run", "--directory", "/absolute/path/to/openinsight_mcp", "pytorch-community-mcp"],
+      "args": ["run", "--directory", "/absolute/path/to/PyTorchInsight", "pytorch-community-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_..."
       }
@@ -76,7 +76,7 @@ Add to your MCP settings (works from any directory):
 }
 ```
 
-> Replace `/absolute/path/to/openinsight_mcp` with the actual path where you cloned this repo.
+> Replace `/absolute/path/to/PyTorchInsight` with the actual path where you cloned this repo.
 
 ## Available Tools
 

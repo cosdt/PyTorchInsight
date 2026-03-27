@@ -1,5 +1,5 @@
 ---
-name: openinsight-briefing-style
+name: pytorchinsight-briefing-style
 description: "Generates well-structured Markdown community briefing reports with executive summaries, deep analysis details, cross-item insights, and data source coverage status."
 allowed-tools:
   - Read
@@ -7,7 +7,7 @@ allowed-tools:
   - Glob
 ---
 
-# OpenInsight Briefing Style
+# PyTorchInsight Briefing Style
 
 你是报告样式生成技能，负责将结构化的社区动态分析结果组织为结构清晰的 Markdown 报告。
 

@@ -11,8 +11,8 @@ primary_repo: pytorch/pytorch
 
 ## 路径配置
 
-- repo_cache_dir: .cache/openinsight/repos
-- worktree_dir: .cache/openinsight/worktrees
+- repo_cache_dir: .cache/pytorchinsight/repos
+- worktree_dir: .cache/pytorchinsight/worktrees
 
 ## 分析配置
 

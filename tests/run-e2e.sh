@@ -1,5 +1,5 @@
 #!/bin/bash
-# OpenInsight Multi-Agent E2E Test Runner
+# PyTorchInsight Multi-Agent E2E Test Runner
 # Usage: ./tests/run-e2e.sh [query_number|all] [model]
 # Example: ./tests/run-e2e.sh 2 alibaba-cn/kimi-k2.5
 # Example: ./tests/run-e2e.sh all
@@ -7,7 +7,7 @@
 set -euo pipefail
 
 MODEL="${2:-alibaba-cn/kimi-k2.5}"
-AGENT="openinsight-orchestrator"
+AGENT="pytorchinsight-orchestrator"
 LOG_DIR="tests/results/$(date +%Y-%m-%d_%H%M%S)"
 mkdir -p "$LOG_DIR"
 

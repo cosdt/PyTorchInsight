@@ -47,7 +47,7 @@ jobs:
       - name: Restore repo cache
         uses: actions/cache@v4
         with:
-          path: .cache/openinsight/repos/
+          path: .cache/pytorchinsight/repos/
           key: pytorch-bare-clone-${{ github.run_id }}
           restore-keys: pytorch-bare-clone-
 
@@ -65,7 +65,7 @@ jobs:
           INPUT_TIME_WINDOW: ${{ inputs.time_window || '最近7天' }}
         run: |
           opencode run \
-            --agent openinsight-orchestrator \
+            --agent pytorchinsight-orchestrator \
             --model alibaba-cn/kimi-k2.5 \
             -- "@user-prompt.md $INPUT_PROJECT $INPUT_TIME_WINDOW 执行完整工作流生成报告。"
 

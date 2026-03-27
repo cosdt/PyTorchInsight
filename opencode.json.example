@@ -16,7 +16,7 @@
         "uv",
         "run",
         "--directory",
-        "<path-to-openinsight-mcp>",
+        "<path-to-pytorchinsight>",
         "pytorch-community-mcp"
       ]
     }
